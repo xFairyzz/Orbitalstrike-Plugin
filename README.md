@@ -1,12 +1,13 @@
 # OrbitalStrike Minecraft Plugin
 
 **Epic orbital strikes like Wemmbu — Nuke & Stab or Dog Cannon Like Flamefrags!**  
-A powerful Plugin for **Minecraft 1.21.1 - 1.21.10** featuring four devastating weapons:
+A powerful Plugin for **Minecraft 1.21.1 - 1.21.11** featuring four devastating weapons:
 ###### Should work on any Spigot fork like Paper or Purpur  if not Message me on Discord or open a issue here
 
 - `/orbital nuke` → **Massive crater with 10 rings + center TNT**
 - `/orbital stab` → **Instant full-depth tunnel to bedrock**
 - `/orbital dogs` → **50+ wolves ready to Help you**
+- `/orbital stasis [coords]` → **if you need a quick escape**
 - `/orbital chunkeater` → **Armorstand ready to destroy the whole Chunk**
 ---
 
@@ -27,7 +28,7 @@ A powerful Plugin for **Minecraft 1.21.1 - 1.21.10** featuring four devastating 
 
 ## Installation
 
-1. Download `OrbitalStrike-1.4.0.jar`
+1. Download `OrbitalStrike-1.5.0.jar`
 2. Place it in your `plugins/` folder
 3. Go into **"spigot.yml"** and set **"max-tnt-per-tick"** to **1000** else it might cause problems
 4. **Start the server**
@@ -42,6 +43,7 @@ A powerful Plugin for **Minecraft 1.21.1 - 1.21.10** featuring four devastating 
 | `/orbital nuke` | Gives you a **Nuke Rod** |
 | `/orbital stab` | Gives you a **Stab Rod** |
 | `/orbital dogs` | Gives you a **Dog Rod** |
+| `/orbital stasis [coords]` | Gives you a **Stasis Rod** |
 | `/orbital chunkeater` | Gives you a **Chunkeater Armorstand** |
 
 > **Permission:** `orbital.use`  

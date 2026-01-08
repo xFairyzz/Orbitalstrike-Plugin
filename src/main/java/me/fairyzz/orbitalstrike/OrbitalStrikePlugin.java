@@ -15,6 +15,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -32,14 +33,14 @@ import java.util.stream.Collectors;
 public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, Listener, TabCompleter {
 
     private static final int CUSTOM_MODEL_DATA = 12345;
-    private static final String[] STRIKE_TYPES = {"nuke", "stab", "dogs", "chunkeater"};
+    private static final String[] STRIKE_TYPES = {"nuke", "stab", "dogs", "chunkeater", "statis"};
 
     private final Map<UUID, Set<UUID>> strikeTNT = new HashMap<>();
     private final Map<UUID, String> pendingStrikes = new HashMap<>();
     private FileConfiguration config;
 
-    private static final String GITHUB_REPO = "xFairyzz/orbitalstrike";
-    private static final String CURRENT_VERSION = "v1.4.1";
+    private static final String GITHUB_REPO = "xFairyzz/Orbitalstrike-Plugin";
+    private static final String CURRENT_VERSION = "v1.5.0";
     private boolean hasUpdate = false;
     private String latestVersion = "";
 
@@ -150,8 +151,8 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
             return true;
         }
 
-        if (args.length != 1) {
-            sendMessage(player, "usage", Map.of("{CMD}", "/orbital <nuke|stab|dogs>"));
+        if (args.length == 0) {
+            sendMessage(player, "usage", Map.of("{CMD}", "/orbital <nuke|stab|dogs|statis>"));
             return true;
         }
 
@@ -161,21 +162,60 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
             return true;
         }
 
-        giveStrikeRod(player, type);
+        if (type.equals("statis")) {
+            if (args.length != 4) {
+                sendMessage(player, "usage", Map.of("{CMD}", "/orbital statis <x> <y> <z>"));
+                return true;
+            }
+            try {
+                double x = Double.parseDouble(args[1]);
+                double y = Double.parseDouble(args[2]);
+                double z = Double.parseDouble(args[3]);
+                giveStrikeRod(player, type, x, y, z);
+            } catch (NumberFormatException e) {
+                player.sendMessage("§cInvalid coordinates!");
+                return true;
+            }
+        } else {
+            if (args.length != 1) {
+                sendMessage(player, "usage", Map.of("{CMD}", "/orbital <nuke|stab|dogs>"));
+                return true;
+            }
+            giveStrikeRod(player, type);
+        }
         return true;
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (!command.getName().equalsIgnoreCase("orbital") || args.length != 1) {
+        if (!command.getName().equalsIgnoreCase("orbital")) {
             return null;
         }
 
-        String input = args[0].toLowerCase();
-        return Arrays.stream(STRIKE_TYPES)
-                .filter(type -> type.startsWith(input))
-                .sorted()
-                .collect(Collectors.toList());
+        if (args.length == 1) {
+            String input = args[0].toLowerCase();
+            return Arrays.stream(STRIKE_TYPES)
+                    .filter(type -> type.startsWith(input))
+                    .sorted()
+                    .collect(Collectors.toList());
+        }
+
+        if (args.length > 1) {
+            String type = args[0].toLowerCase();
+            if (type.equals("statis") || type.startsWith("statis")) {
+                if (args.length >= 5) {
+                    return Collections.emptyList();
+                }
+
+                List<String> completions = new ArrayList<>();
+                if (args.length == 2) completions.add("<x>");
+                if (args.length == 3) completions.add("<y>");
+                if (args.length == 4) completions.add("<z>");
+                return completions;
+            }
+        }
+
+        return Collections.emptyList();
     }
 
     @EventHandler
@@ -195,6 +235,18 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
         Player player = event.getPlayer();
 
         if (type.equals("chunkeater")) {
+            return;
+        }
+
+        if (type.equals("statis")) {
+            boolean throwRod = config.getBoolean("rod.throw-rod", true);
+
+            if (throwRod) {
+                pendingStrikes.put(player.getUniqueId(), type);
+            } else {
+                executeStatisStrike(player, item);
+                event.setCancelled(true);
+            }
             return;
         }
 
@@ -238,6 +290,27 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
 
         String type = pendingStrikes.remove(playerId);
 
+        if (type.equals("statis")) {
+            ItemStack mainHand = player.getInventory().getItemInMainHand();
+            ItemStack offHand = player.getInventory().getItemInOffHand();
+
+            boolean consumed = false;
+            if (mainHand.getType() == Material.FISHING_ROD && isStrikeRod(mainHand)) {
+                executeStatisStrike(player, mainHand);
+                mainHand.setAmount(mainHand.getAmount() - 1);
+                consumed = true;
+            } else if (offHand.getType() == Material.FISHING_ROD && isStrikeRod(offHand)) {
+                executeStatisStrike(player, offHand);
+                offHand.setAmount(offHand.getAmount() - 1);
+                consumed = true;
+            }
+
+            if (consumed) {
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_TELEPORT, 1.0f, 1.0f);
+                player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+            }
+            return;
+        }
         ItemStack mainHand = player.getInventory().getItemInMainHand();
         ItemStack offHand = player.getInventory().getItemInOffHand();
 
@@ -309,6 +382,25 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
         Bukkit.getScheduler().runTask(this, () -> {
             spawnChunkEater(target.getWorld(), target);
         });
+    }
+
+    private void executeStatisStrike(Player player, ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !meta.getPersistentDataContainer().has(new NamespacedKey(this, "statis_x"), PersistentDataType.DOUBLE) ||
+                !meta.getPersistentDataContainer().has(new NamespacedKey(this, "statis_y"), PersistentDataType.DOUBLE) ||
+                !meta.getPersistentDataContainer().has(new NamespacedKey(this, "statis_z"), PersistentDataType.DOUBLE)) {
+            return;
+        }
+
+        double x = meta.getPersistentDataContainer().get(new NamespacedKey(this, "statis_x"), PersistentDataType.DOUBLE);
+        double y = meta.getPersistentDataContainer().get(new NamespacedKey(this, "statis_y"), PersistentDataType.DOUBLE);
+        double z = meta.getPersistentDataContainer().get(new NamespacedKey(this, "statis_z"), PersistentDataType.DOUBLE);
+
+        Location teleportLoc = new Location(player.getWorld(), x, y, z);
+        player.teleport(teleportLoc);
+        player.playSound(teleportLoc, Sound.ENTITY_ENDER_PEARL_THROW, 1.0f, 1.0f);
+
+        item.setAmount(item.getAmount() - 1);
     }
 
     private void executeStrike(Player player, ItemStack item, String type, Location target) {
@@ -617,7 +709,7 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
             }
         }, 100L);
     }
-    
+
     private boolean hasPermission(Player player) {
         return player.hasPermission(config.getString("permission", "orbital.use"));
     }
@@ -632,7 +724,17 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
         sendMessage(player, "received", Map.of("{TYPE}", type.toUpperCase()));
     }
 
+    private void giveStrikeRod(Player player, String type, double x, double y, double z) {
+        ItemStack rod = createStrikeRod(type, x, y, z);
+        player.getInventory().addItem(rod);
+        sendMessage(player, "received", Map.of("{TYPE}", type.toUpperCase()));
+    }
+
     private ItemStack createStrikeRod(String type) {
+        return createStrikeRod(type, 0, 0, 0);
+    }
+
+    private ItemStack createStrikeRod(String type, double x, double y, double z) {
         Material material = type.equals("chunkeater") ? Material.ARMOR_STAND : Material.FISHING_ROD;
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
@@ -640,13 +742,19 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
         String displayName = switch (type) {
             case "nuke" -> "Nuke shot";
             case "stab" -> "Stab shot";
-            case "dogs" -> "Dog shot";
+            case "dogs" -> "Dogs";
             case "chunkeater" -> "Chunk Eater";
+            case "statis" -> "Statis";
             default -> "Orbital Strike Rod";
         };
 
         meta.setDisplayName(displayName);
         meta.setCustomModelData(CUSTOM_MODEL_DATA);
+        if (type.equals("statis")) {
+            meta.getPersistentDataContainer().set(new NamespacedKey(this, "statis_x"), PersistentDataType.DOUBLE, x);
+            meta.getPersistentDataContainer().set(new NamespacedKey(this, "statis_y"), PersistentDataType.DOUBLE, y);
+            meta.getPersistentDataContainer().set(new NamespacedKey(this, "statis_z"), PersistentDataType.DOUBLE, z);
+        }
         item.setItemMeta(meta);
 
         if (material == Material.FISHING_ROD) {
@@ -669,8 +777,9 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
         return switch (displayName) {
             case "Nuke shot" -> "nuke";
             case "Stab shot" -> "stab";
-            case "Dog shot" -> "dogs";
+            case "Dogs" -> "dogs";
             case "Chunk Eater" -> "chunkeater";
+            case "Statis" -> "statis";
             default -> null;
         };
     }
