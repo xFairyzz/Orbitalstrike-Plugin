@@ -17,8 +17,8 @@ A powerful Plugin for **Minecraft 1.21.1 - 1.21.11** featuring four devastating 
 |--------|-------------------------------------------------------------------------------------------------|
 | **Nuke Strike** | 10 rings + center, all TNT drops simultaneously from above, explodes **2 seconds after impact** |
 | **Stab Strike** | Instant tunnel straight down to bedrock                                                         |
-| **Dogs Strike** | Summons **50+ tamed wolves** with **Speed II + Strength II**                                    |
-| **Chunkeater** | Powerful Armorstand that destroys a whole Chunk                                                                     |
+| **Dogs Strike** | Summons **50+ tamed wolves** with **Speed II + Strength II and Armor**                          |
+| **Chunkeater** | Powerful Armorstand that destroys a whole Chunk                                                 |
 | **One-Time Use** | Rod breaks after single use                                                                     |
 | **Fully Configurable** | `config.yml` for rings, yield, height, delay                                                    |
 | **Permission System** | `orbital.use` — easy with LuckPerms                                                             |
@@ -28,7 +28,7 @@ A powerful Plugin for **Minecraft 1.21.1 - 1.21.11** featuring four devastating 
 
 ## Installation
 
-1. Download `OrbitalStrike-1.5.0.jar`
+1. Download `OrbitalStrike-1.6.0.jar`
 2. Place it in your `plugins/` folder
 3. Go into **"spigot.yml"** and set **"max-tnt-per-tick"** to **1000** else it might cause problems
 4. **Start the server**

@@ -15,12 +15,18 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Wolf;
 import org.bukkit.event.entity.EntityPlaceEvent;
 
 import java.io.BufferedReader;
@@ -33,14 +39,14 @@ import java.util.stream.Collectors;
 public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, Listener, TabCompleter {
 
     private static final int CUSTOM_MODEL_DATA = 12345;
-    private static final String[] STRIKE_TYPES = {"nuke", "stab", "dogs", "chunkeater", "statis"};
+    private static final String[] STRIKE_TYPES = {"nuke", "stab", "dogs", "chunkeater", "stasis"};
 
     private final Map<UUID, Set<UUID>> strikeTNT = new HashMap<>();
     private final Map<UUID, String> pendingStrikes = new HashMap<>();
     private FileConfiguration config;
 
     private static final String GITHUB_REPO = "xFairyzz/Orbitalstrike-Plugin";
-    private static final String CURRENT_VERSION = "v1.5.0";
+    private static final String CURRENT_VERSION = "v1.6.0";
     private boolean hasUpdate = false;
     private String latestVersion = "";
 
@@ -87,6 +93,7 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
                 String json = response.toString();
                 String tagName = extractTagName(json);
 
+                assert tagName != null;
                 String normalizedTag = tagName.toLowerCase().startsWith("v") ? tagName.substring(1) : tagName;
                 String normalizedCurrent = CURRENT_VERSION.toLowerCase().startsWith("v") ? CURRENT_VERSION.substring(1) : CURRENT_VERSION;
 
@@ -133,6 +140,7 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
     public void onPlayerJoin(PlayerJoinEvent event) {
         Bukkit.getScheduler().runTaskLater(this, () -> sendUpdateNotification(event.getPlayer()), 20L);
     }
+
     @Override
     public void onDisable() {
         strikeTNT.clear();
@@ -152,7 +160,7 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
         }
 
         if (args.length == 0) {
-            sendMessage(player, "usage", Map.of("{CMD}", "/orbital <nuke|stab|dogs|statis>"));
+            sendMessage(player, "usage", Map.of("{CMD}", "/orbital <nuke|stab|dogs|stasis>"));
             return true;
         }
 
@@ -162,9 +170,9 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
             return true;
         }
 
-        if (type.equals("statis")) {
+        if (type.equals("stasis")) {
             if (args.length != 4) {
-                sendMessage(player, "usage", Map.of("{CMD}", "/orbital statis <x> <y> <z>"));
+                sendMessage(player, "usage", Map.of("{CMD}", "/orbital stasis <x> <y> <z>"));
                 return true;
             }
             try {
@@ -202,7 +210,7 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
 
         if (args.length > 1) {
             String type = args[0].toLowerCase();
-            if (type.equals("statis") || type.startsWith("statis")) {
+            if (type.startsWith("stasis")) {
                 if (args.length >= 5) {
                     return Collections.emptyList();
                 }
@@ -238,13 +246,13 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
             return;
         }
 
-        if (type.equals("statis")) {
+        if (type.equals("stasis")) {
             boolean throwRod = config.getBoolean("rod.throw-rod", true);
 
             if (throwRod) {
                 pendingStrikes.put(player.getUniqueId(), type);
             } else {
-                executeStatisStrike(player, item);
+                executeStasisStrike(player, item);
                 event.setCancelled(true);
             }
             return;
@@ -290,17 +298,17 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
 
         String type = pendingStrikes.remove(playerId);
 
-        if (type.equals("statis")) {
+        if (type.equals("stasis")) {
             ItemStack mainHand = player.getInventory().getItemInMainHand();
             ItemStack offHand = player.getInventory().getItemInOffHand();
 
             boolean consumed = false;
             if (mainHand.getType() == Material.FISHING_ROD && isStrikeRod(mainHand)) {
-                executeStatisStrike(player, mainHand);
+                executeStasisStrike(player, mainHand);
                 mainHand.setAmount(mainHand.getAmount() - 1);
                 consumed = true;
             } else if (offHand.getType() == Material.FISHING_ROD && isStrikeRod(offHand)) {
-                executeStatisStrike(player, offHand);
+                executeStasisStrike(player, offHand);
                 offHand.setAmount(offHand.getAmount() - 1);
                 consumed = true;
             }
@@ -368,7 +376,7 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
             item = player.getInventory().getItemInOffHand();
         }
 
-        if (!isStrikeRod(item) || !getStrikeType(item).equals("chunkeater")) {
+        if (!isStrikeRod(item) || !Objects.equals(getStrikeType(item), "chunkeater")) {
             return;
         }
 
@@ -384,17 +392,17 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
         });
     }
 
-    private void executeStatisStrike(Player player, ItemStack item) {
+    private void executeStasisStrike(Player player, ItemStack item) {
         ItemMeta meta = item.getItemMeta();
-        if (meta == null || !meta.getPersistentDataContainer().has(new NamespacedKey(this, "statis_x"), PersistentDataType.DOUBLE) ||
-                !meta.getPersistentDataContainer().has(new NamespacedKey(this, "statis_y"), PersistentDataType.DOUBLE) ||
-                !meta.getPersistentDataContainer().has(new NamespacedKey(this, "statis_z"), PersistentDataType.DOUBLE)) {
+        if (meta == null || !meta.getPersistentDataContainer().has(new NamespacedKey(this, "stasis_x"), PersistentDataType.DOUBLE) ||
+                !meta.getPersistentDataContainer().has(new NamespacedKey(this, "stasis_y"), PersistentDataType.DOUBLE) ||
+                !meta.getPersistentDataContainer().has(new NamespacedKey(this, "stasis_z"), PersistentDataType.DOUBLE)) {
             return;
         }
 
-        double x = meta.getPersistentDataContainer().get(new NamespacedKey(this, "statis_x"), PersistentDataType.DOUBLE);
-        double y = meta.getPersistentDataContainer().get(new NamespacedKey(this, "statis_y"), PersistentDataType.DOUBLE);
-        double z = meta.getPersistentDataContainer().get(new NamespacedKey(this, "statis_z"), PersistentDataType.DOUBLE);
+        double x = meta.getPersistentDataContainer().get(new NamespacedKey(this, "stasis_x"), PersistentDataType.DOUBLE);
+        double y = meta.getPersistentDataContainer().get(new NamespacedKey(this, "stasis_y"), PersistentDataType.DOUBLE);
+        double z = meta.getPersistentDataContainer().get(new NamespacedKey(this, "stasis_z"), PersistentDataType.DOUBLE);
 
         Location teleportLoc = new Location(player.getWorld(), x, y, z);
         player.teleport(teleportLoc);
@@ -426,7 +434,7 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
     }
 
     private void consumeRodDelayed(Player player, ItemStack originalItem) {
-        String displayName = originalItem.getItemMeta().getDisplayName();
+        String displayName = Objects.requireNonNull(originalItem.getItemMeta()).getDisplayName();
 
         Bukkit.getScheduler().runTaskLater(this, () -> {
             if (consumeFromHand(player.getInventory().getItemInMainHand(), displayName, player)) {
@@ -451,30 +459,29 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
     private void spawnNuke(World world, Location center, UUID strikeId, Set<UUID> tntList) {
         int rings = config.getInt("nuke.rings", 10);
         double height = center.getY() + config.getInt("nuke.height", 80);
-        float yield = (float) config.getDouble("nuke.yield",6.0);
+        float yield = (float) config.getDouble("nuke.yield", 6.0);
         int baseTnt = config.getInt("nuke.tnt-per-ring-base", 40);
         int increase = config.getInt("nuke.tnt-per-ring-increase", 2);
         boolean centerTnt = config.getBoolean("nuke.center-tnt", true);
         boolean animatedRings = config.getBoolean("nuke.Animated-rings", true);
 
+        Location centerLoc = new Location(world, center.getX() + 0.5, height, center.getZ() + 0.5);
+
         if (animatedRings) {
-            Location centerLoc = new Location(world, center.getX() + 0.5, height, center.getZ() + 0.5);
             UUID centerId;
-
             if (centerTnt) {
-                TNTPrimed centerTntEntity = (TNTPrimed) world.spawnEntity(centerLoc.clone(), EntityType.TNT);
-                centerTntEntity.setFuseTicks(10000);
-                centerTntEntity.setVelocity(new Vector(0, 0, 0));
-                centerTntEntity.setGravity(false);
-                centerTntEntity.setYield(yield);
-                centerTntEntity.setInvulnerable(true);
-
-                centerId = centerTntEntity.getUniqueId();
+                TNTPrimed ct = (TNTPrimed) world.spawnEntity(centerLoc.clone(), EntityType.TNT);
+                ct.setFuseTicks(10000);
+                ct.setVelocity(new Vector(0, 0, 0));
+                ct.setGravity(false);
+                ct.setYield(yield);
+                ct.setInvulnerable(true);
+                centerId = ct.getUniqueId();
                 tntList.add(centerId);
 
                 Bukkit.getScheduler().runTaskLater(this, () -> {
-                    for (Entity entity : world.getNearbyEntities(centerLoc, 100, 100, 100)) {
-                        if (entity instanceof TNTPrimed tnt && tnt.getUniqueId().equals(centerId) && !tnt.isDead()) {
+                    for (Entity e : world.getNearbyEntities(centerLoc, 100, 100, 100)) {
+                        if (e instanceof TNTPrimed tnt && tnt.getUniqueId().equals(centerId) && !tnt.isDead()) {
                             tnt.setGravity(true);
                             break;
                         }
@@ -486,34 +493,52 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
 
             for (int ring = 1; ring <= rings; ring++) {
                 double radius = ring * 4.0;
-                int tntCount = baseTnt + ring * increase;
-                double step = 360.0 / tntCount;
+                int originalCount = baseTnt + ring * increase;
+                int tntCount = originalCount;
 
-                for (int i = 0; i < tntCount; i++) {
-                    double angle = i * step + (ring * 10);
-                    double targetX = center.getX() + radius * Math.cos(Math.toRadians(angle));
-                    double targetZ = center.getZ() + radius * Math.sin(Math.toRadians(angle));
-                    double roundedTargetX = Math.round(targetX * 10) / 10.0;
-                    double roundedTargetZ = Math.round(targetZ * 10) / 10.0;
+                boolean splitRings = config.getBoolean("nuke.full-rings", false);
+                if (splitRings && originalCount > 15) {
+                    double minRemove = config.getDouble("nuke.full-rings-min-remove", 0.20);
+                    double maxRemove = config.getDouble("nuke.full-rings-max-remove", 0.35);
+                    double removePercent = minRemove + (Math.random() * (maxRemove - minRemove));
+                    int remove = (int) (originalCount * removePercent);
+                    remove = Math.min(remove, originalCount - 10);
+                    tntCount = originalCount - remove;
+                }
 
-                    TNTPrimed ringTnt = (TNTPrimed) world.spawnEntity(centerLoc.clone(), EntityType.TNT);
-                    ringTnt.setFuseTicks(10000);
-                    ringTnt.setVelocity(new Vector(0, 0, 0));
-                    ringTnt.setGravity(false);
-                    ringTnt.setYield(yield);
-                    ringTnt.setInvulnerable(true);
+                double step = 360.0 / originalCount;
 
-                    UUID ringId = ringTnt.getUniqueId();
-                    tntList.add(ringId);
+                List<Integer> indices = new ArrayList<>();
+                for (int j = 0; j < originalCount; j++) indices.add(j);
 
-                    final double finalX = roundedTargetX + 0.5;
-                    final double finalZ = roundedTargetZ + 0.5;
+                if (splitRings && tntCount < originalCount) {
+                    Collections.shuffle(indices);
+                    indices = indices.subList(0, tntCount);
+                    Collections.sort(indices);
+                }
+
+                for (int idx : indices) {
+                    double angle = idx * step + (ring * 10);
+                    double tx = center.getX() + radius * Math.cos(Math.toRadians(angle));
+                    double tz = center.getZ() + radius * Math.sin(Math.toRadians(angle));
+                    double targetX = Math.round(tx * 10) / 10.0 + 0.5;
+                    double targetZ = Math.round(tz * 10) / 10.0 + 0.5;
+
+                    TNTPrimed tnt = (TNTPrimed) world.spawnEntity(centerLoc.clone(), EntityType.TNT);
+                    tnt.setFuseTicks(10000);
+                    tnt.setVelocity(new Vector(0, 0, 0));
+                    tnt.setGravity(false);
+                    tnt.setYield(yield);
+                    tnt.setInvulnerable(true);
+                    tntList.add(tnt.getUniqueId());
+
+                    final double fx = targetX, fz = targetZ;
+                    final UUID tntUuid = tnt.getUniqueId();
                     Bukkit.getScheduler().runTaskLater(this, () -> {
-                        for (Entity entity : world.getNearbyEntities(centerLoc, 200, 200, 200)) {
-                            if (entity instanceof TNTPrimed tnt && tnt.getUniqueId().equals(ringId) && !tnt.isDead()) {
-                                Vector velocity = getVector(finalX, centerLoc, finalZ);
-                                tnt.setVelocity(velocity);
-                                tnt.setGravity(true);
+                        for (Entity e : world.getNearbyEntities(centerLoc, 200, 200, 200)) {
+                            if (e instanceof TNTPrimed rtnt && rtnt.getUniqueId().equals(tntUuid) && !rtnt.isDead()) {
+                                rtnt.setVelocity(getVector(fx, centerLoc, fz));
+                                rtnt.setGravity(true);
                                 break;
                             }
                         }
@@ -521,39 +546,39 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
                 }
             }
 
-            int fuseFallbackTicks = config.getInt("nuke.fuse-fallback-ticks", 160);
+            int fuseTicks = config.getInt("nuke.fuse-fallback-ticks", 160);
             Bukkit.getScheduler().runTaskLater(this, () -> {
-                for (UUID id : new ArrayList<>(tntList)) {
-                    for (Entity entity : world.getNearbyEntities(centerLoc, 200, 200, 200)) {
-                        if (entity instanceof TNTPrimed tnt && tnt.getUniqueId().equals(id) && !tnt.isDead()) {
+                List<UUID> toRemove = new ArrayList<>();
+                for (UUID id : tntList) {
+                    boolean exploded = false;
+                    for (Entity e : world.getNearbyEntities(centerLoc, 200, 200, 200)) {
+                        if (e instanceof TNTPrimed tnt && tnt.getUniqueId().equals(id) && !tnt.isDead()) {
                             tnt.setFuseTicks(1);
-                            tntList.remove(id);
+                            exploded = true;
                             break;
                         }
                     }
+                    if (exploded) toRemove.add(id);
                 }
-            }, fuseFallbackTicks);
+                tntList.removeAll(toRemove);
+            }, fuseTicks);
 
         } else {
             if (centerTnt) {
-                Location loc = new Location(world, center.getX() + 0.5, height, center.getZ() + 0.5);
-                spawnNukeTNT(world, loc, yield, strikeId, tntList);
+                spawnNukeTNT(world, centerLoc.clone(), yield, strikeId, tntList);
             }
-
             for (int ring = 1; ring <= rings; ring++) {
                 double radius = ring * 4.0;
                 int tntCount = baseTnt + ring * increase;
                 double step = 360.0 / tntCount;
                 double startAngle = ring * 13.0;
-
                 for (int i = 0; i < tntCount; i++) {
                     double angle = startAngle + i * step;
                     double x = center.getX() + radius * Math.cos(Math.toRadians(angle));
                     double z = center.getZ() + radius * Math.sin(Math.toRadians(angle));
-                    double roundedX = Math.round(x * 10) / 10.0;
-                    double roundedZ = Math.round(z * 10) / 10.0;
-
-                    Location loc = new Location(world, roundedX + 0.5, height, roundedZ + 0.5);
+                    double roundedX = Math.round(x * 10) / 10.0 + 0.5;
+                    double roundedZ = Math.round(z * 10) / 10.0 + 0.5;
+                    Location loc = new Location(world, roundedX, height, roundedZ);
                     spawnNukeTNT(world, loc, yield, strikeId, tntList);
                 }
             }
@@ -666,11 +691,15 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
             wolf.setSitting(false);
             wolf.setCollarColor(DyeColor.RED);
 
+            ItemStack wolfArmor = new ItemStack(Material.WOLF_ARMOR);
+            Objects.requireNonNull(wolf.getEquipment()).setItem(EquipmentSlot.BODY, wolfArmor);
+
             for (PotionEffect effect : effects) {
                 wolf.addPotionEffect(effect);
             }
         }
     }
+
     private void spawnChunkEater(World world, Location center) {
         Location ground = findGroundLevel(world, center);
         Chunk chunk = ground.getChunk();
@@ -744,42 +773,60 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
             case "stab" -> "Stab shot";
             case "dogs" -> "Dogs";
             case "chunkeater" -> "Chunk Eater";
-            case "statis" -> "Statis";
+            case "stasis" -> "Stasis";
             default -> "Orbital Strike Rod";
         };
 
+        assert meta != null;
         meta.setDisplayName(displayName);
-        meta.setCustomModelData(CUSTOM_MODEL_DATA);
-        if (type.equals("statis")) {
-            meta.getPersistentDataContainer().set(new NamespacedKey(this, "statis_x"), PersistentDataType.DOUBLE, x);
-            meta.getPersistentDataContainer().set(new NamespacedKey(this, "statis_y"), PersistentDataType.DOUBLE, y);
-            meta.getPersistentDataContainer().set(new NamespacedKey(this, "statis_z"), PersistentDataType.DOUBLE, z);
+
+        CustomModelDataComponent cmd = meta.getCustomModelDataComponent();
+        cmd.setFloats(List.of((float) CUSTOM_MODEL_DATA));
+        meta.setCustomModelDataComponent(cmd);
+
+        if (type.equals("stasis")) {
+            meta.getPersistentDataContainer().set(new NamespacedKey(this, "stasis_x"), PersistentDataType.DOUBLE, x);
+            meta.getPersistentDataContainer().set(new NamespacedKey(this, "stasis_y"), PersistentDataType.DOUBLE, y);
+            meta.getPersistentDataContainer().set(new NamespacedKey(this, "stasis_z"), PersistentDataType.DOUBLE, z);
         }
-        item.setItemMeta(meta);
 
         if (material == Material.FISHING_ROD) {
-            item.setDurability((short) 63);
+            if (meta instanceof org.bukkit.inventory.meta.Damageable damageable) {
+                damageable.setDamage(63);
+            }
         }
 
+        item.setItemMeta(meta);
         return item;
     }
 
     private boolean isStrikeRod(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
+
         ItemMeta meta = item.getItemMeta();
-        if (!meta.hasDisplayName() || !meta.hasCustomModelData() || meta.getCustomModelData() != CUSTOM_MODEL_DATA) return false;
-        Material type = item.getType();
-        return type == Material.FISHING_ROD || type == Material.ARMOR_STAND;
+
+        assert meta != null;
+        if (!meta.hasDisplayName()) return false;
+
+        if (!meta.hasCustomModelDataComponent()) return false;
+
+        CustomModelDataComponent cmd = meta.getCustomModelDataComponent();
+        List<Float> floats = cmd.getFloats();
+
+        if (floats.isEmpty()) return false;
+
+        float expected = (float) CUSTOM_MODEL_DATA;
+        return floats.contains(expected);
     }
 
     private String getStrikeType(ItemStack item) {
-        String displayName = item.getItemMeta().getDisplayName();
+        String displayName = Objects.requireNonNull(item.getItemMeta()).getDisplayName();
         return switch (displayName) {
             case "Nuke shot" -> "nuke";
             case "Stab shot" -> "stab";
             case "Dogs" -> "dogs";
             case "Chunk Eater" -> "chunkeater";
-            case "Statis" -> "statis";
+            case "Stasis" -> "stasis";
             default -> null;
         };
     }
@@ -855,6 +902,7 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
         nuke.put("center-tnt", true);
         nuke.put("fuse-fallback-ticks", 160);
         nuke.put("Animated-rings", true);
+        nuke.put("full-rings", false);
         config.addDefault("nuke", nuke);
     }
 
@@ -874,7 +922,6 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
         List<String> effects = new ArrayList<>();
         effects.add("SPEED:1");
         effects.add("STRENGTH:2");
-        effects.add("ABSORPTION:99");
         dogs.put("effects", effects);
 
         config.addDefault("dogs", dogs);
@@ -888,3 +935,4 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
         config.addDefault("messages", messages);
     }
 }
+

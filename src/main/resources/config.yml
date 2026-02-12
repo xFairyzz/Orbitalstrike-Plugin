@@ -14,6 +14,7 @@ nuke:
   center-tnt: true
   fuse-fallback-ticks: 160 # needs 8 Seconds to explode (20 ticks = 1 Second) (20x8=160)
   Animated-rings: true
+  full-rings: false
 
 stab:
   yield: 4.0
@@ -26,7 +27,6 @@ dogs:
   effects:
     - "SPEED:1"
     - "STRENGTH:2"
-    - "ABSORPTION:99"
 
 messages:
   received: "§aYou received an Orbital Strike Rod - §l{TYPE}§a!"
