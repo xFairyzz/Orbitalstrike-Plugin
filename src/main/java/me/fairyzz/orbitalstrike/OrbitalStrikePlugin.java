@@ -15,7 +15,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
@@ -46,7 +45,7 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
     private FileConfiguration config;
 
     private static final String GITHUB_REPO = "xFairyzz/Orbitalstrike-Plugin";
-    private static final String CURRENT_VERSION = "v1.6.0";
+    private static final String CURRENT_VERSION = "v1.6.1";
     private boolean hasUpdate = false;
     private String latestVersion = "";
 
@@ -447,7 +446,7 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
     private boolean consumeFromHand(ItemStack hand, String displayName, Player player) {
         if (hand.getType() == Material.FISHING_ROD &&
                 hand.hasItemMeta() &&
-                hand.getItemMeta().getDisplayName().equals(displayName)) {
+                Objects.requireNonNull(hand.getItemMeta()).getDisplayName().equals(displayName)) {
 
             hand.setAmount(hand.getAmount() - 1);
             player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
@@ -479,6 +478,7 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
                 centerId = ct.getUniqueId();
                 tntList.add(centerId);
 
+                // Gravity-Drop für Center
                 Bukkit.getScheduler().runTaskLater(this, () -> {
                     for (Entity e : world.getNearbyEntities(centerLoc, 100, 100, 100)) {
                         if (e instanceof TNTPrimed tnt && tnt.getUniqueId().equals(centerId) && !tnt.isDead()) {
@@ -514,9 +514,10 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
                 if (splitRings && tntCount < originalCount) {
                     Collections.shuffle(indices);
                     indices = indices.subList(0, tntCount);
-                    Collections.sort(indices);
+                    Collections.sort(indices); // Für optisch schöneren Ring
                 }
 
+                // TNT pro Ring spawnen
                 for (int idx : indices) {
                     double angle = idx * step + (ring * 10);
                     double tx = center.getX() + radius * Math.cos(Math.toRadians(angle));
@@ -546,6 +547,7 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
                 }
             }
 
+            // Fallback-Explosion (als normale Schleife, keine Lambda-Probleme)
             int fuseTicks = config.getInt("nuke.fuse-fallback-ticks", 160);
             Bukkit.getScheduler().runTaskLater(this, () -> {
                 List<UUID> toRemove = new ArrayList<>();
@@ -560,10 +562,11 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
                     }
                     if (exploded) toRemove.add(id);
                 }
-                tntList.removeAll(toRemove);
+                toRemove.forEach(tntList::remove);
             }, fuseTicks);
 
         } else {
+            // Nicht-animierte Version (direkt spawnen, wie alt)
             if (centerTnt) {
                 spawnNukeTNT(world, centerLoc.clone(), yield, strikeId, tntList);
             }
@@ -779,44 +782,29 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
 
         assert meta != null;
         meta.setDisplayName(displayName);
-
-        CustomModelDataComponent cmd = meta.getCustomModelDataComponent();
-        cmd.setFloats(List.of((float) CUSTOM_MODEL_DATA));
-        meta.setCustomModelDataComponent(cmd);
-
+        meta.setCustomModelData(CUSTOM_MODEL_DATA);
         if (type.equals("stasis")) {
             meta.getPersistentDataContainer().set(new NamespacedKey(this, "stasis_x"), PersistentDataType.DOUBLE, x);
             meta.getPersistentDataContainer().set(new NamespacedKey(this, "stasis_y"), PersistentDataType.DOUBLE, y);
             meta.getPersistentDataContainer().set(new NamespacedKey(this, "stasis_z"), PersistentDataType.DOUBLE, z);
         }
+        item.setItemMeta(meta);
 
         if (material == Material.FISHING_ROD) {
-            if (meta instanceof org.bukkit.inventory.meta.Damageable damageable) {
-                damageable.setDamage(63);
-            }
+            item.setDurability((short) 63);
         }
 
-        item.setItemMeta(meta);
         return item;
     }
 
     private boolean isStrikeRod(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
-
         ItemMeta meta = item.getItemMeta();
-
         assert meta != null;
-        if (!meta.hasDisplayName()) return false;
-
-        if (!meta.hasCustomModelDataComponent()) return false;
-
-        CustomModelDataComponent cmd = meta.getCustomModelDataComponent();
-        List<Float> floats = cmd.getFloats();
-
-        if (floats.isEmpty()) return false;
-
-        float expected = (float) CUSTOM_MODEL_DATA;
-        return floats.contains(expected);
+        if (!meta.hasDisplayName() || !meta.hasCustomModelData() || meta.getCustomModelData() != CUSTOM_MODEL_DATA)
+            return false;
+        Material type = item.getType();
+        return type == Material.FISHING_ROD || type == Material.ARMOR_STAND;
     }
 
     private String getStrikeType(ItemStack item) {
@@ -880,7 +868,6 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
         setNukeDefaults();
         setStabDefaults();
         setDogsDefaults();
-        setMessageDefaults();
 
         config.options().copyDefaults(true);
     }
@@ -926,13 +913,4 @@ public class OrbitalStrikePlugin extends JavaPlugin implements CommandExecutor, 
 
         config.addDefault("dogs", dogs);
     }
-
-    private void setMessageDefaults() {
-        Map<String, Object> messages = new HashMap<>();
-        messages.put("received", "§aYou received an Orbital Strike Rod - §l{TYPE}§a!");
-        messages.put("incoming", "§6Orbital Strike incoming... §l{TYPE}§6!");
-        messages.put("no-target", "§cNo valid target found!");
-        config.addDefault("messages", messages);
-    }
 }
-

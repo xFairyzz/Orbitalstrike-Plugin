@@ -28,7 +28,7 @@ A powerful Plugin for **Minecraft 1.21.1 - 1.21.11** featuring four devastating 
 
 ## Installation
 
-1. Download `OrbitalStrike-1.6.0.jar`
+1. Download `OrbitalStrike-1.6.1.jar`
 2. Place it in your `plugins/` folder
 3. Go into **"spigot.yml"** and set **"max-tnt-per-tick"** to **1000** else it might cause problems
 4. **Start the server**
