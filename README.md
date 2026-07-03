@@ -1,11 +1,11 @@
 # OrbitalStrike Minecraft Plugin
 
-**Epic orbital strikes like Wemmbu — Nuke & Stab or Dog Cannon Like Flamefrags!**  
-A powerful Plugin for **Minecraft 1.21.1 - 1.21.11** featuring four devastating weapons:
+A Plugin for **Minecraft 1.21 - 26.2** featuring Orbitals:
 ###### Should work on any Spigot fork like Paper or Purpur  if not Message me on Discord or open a issue here
 
 - `/orbital nuke` → **Massive crater with 10 rings + center TNT**
 - `/orbital stab` → **Instant full-depth tunnel to bedrock**
+- `/orbital give [playername] [type]` | Gives other Players a Rod |
 - `/orbital dogs` → **50+ wolves ready to Help you**
 - `/orbital stasis [coords]` → **if you need a quick escape**
 - `/orbital chunkeater` → **Armorstand ready to destroy the whole Chunk**
@@ -28,7 +28,7 @@ A powerful Plugin for **Minecraft 1.21.1 - 1.21.11** featuring four devastating 
 
 ## Installation
 
-1. Download `OrbitalStrike-1.6.1.jar`
+1. Download `OrbitalStrike-1.6.7.jar`
 2. Place it in your `plugins/` folder
 3. Go into **"spigot.yml"** and set **"max-tnt-per-tick"** to **1000** else it might cause problems
 4. **Start the server**
@@ -43,6 +43,7 @@ A powerful Plugin for **Minecraft 1.21.1 - 1.21.11** featuring four devastating 
 | `/orbital nuke` | Gives you a **Nuke Rod** |
 | `/orbital stab` | Gives you a **Stab Rod** |
 | `/orbital dogs` | Gives you a **Dog Rod** |
+| `/orbital give [playername] [type]` | Gives other Players a Rod |
 | `/orbital stasis [coords]` | Gives you a **Stasis Rod** |
 | `/orbital chunkeater` | Gives you a **Chunkeater Armorstand** |
 
@@ -55,8 +56,18 @@ A powerful Plugin for **Minecraft 1.21.1 - 1.21.11** featuring four devastating 
 ## Configuration (`config.yml`)
 
 ```yaml
-messages-enabled: true
 permission: "orbital.use"
+
+disabled-worlds:
+  - ""
+
+cooldowns:
+  enabled: false
+  nuke: 300
+  stab: 120
+  dogs: 180
+  chunkeater: 600
+  stasis: 240
 
 rod:
   distance: 100
@@ -68,27 +79,21 @@ nuke:
   yield: 6.0
   tnt-per-ring-base: 40
   tnt-per-ring-increase: 2
+  fuse-ticks: 160
   center-tnt: true
-  fuse-fallback-ticks: 160 # needs 8 Seconds to explode (20 ticks = 1 Second) (20x8=160)
   Animated-rings: true
+  damaged-rings: true
 
 stab:
   yield: 4.0
-  tnt-offset: 0.3
 
 dogs:
   count: 50
   radius: 5.0
-  effect-duration: 2400   # 4 Minutes (20 Ticks = 1 Second)
+  effect-duration: 2400
   effects:
     - "SPEED:1"
     - "STRENGTH:2"
-    - "ABSORPTION:99"
-
-messages:
-  received: "§aYou received an Orbital Strike Rod - §l{TYPE}§a!"
-  incoming: "§6Orbital Strike incoming... §l{TYPE}§6!"
-  no-target: "§cNo valid target found!"
 ```
 
 
