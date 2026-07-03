@@ -1,10 +1,15 @@
 name: OrbitalStrike
-version: 1.6.1
+version: 1.6.7
 main: me.fairyzz.orbitalstrike.OrbitalStrikePlugin
 api-version: 1.21
 commands:
   orbital:
     description: Get an orbital strike rod
-    usage: /orbital <chunkeater|nuke|stab|dogs|stasis>
+    usage: /orbital <chunkeater | nuke | stab | dogs | stasis | give>
     permission: orbital.use
     permission-message: §cYou don't have permission!
+permissions:
+  orbital.use:
+    default: op
+  orbital.give:
+    default: op
