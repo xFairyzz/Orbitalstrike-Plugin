@@ -30,7 +30,7 @@ public class StrikeRodFactory {
         meta.setCustomModelData(CUSTOM_MODEL_DATA);
 
         item.setItemMeta(meta);
-        if (material == Material.FISHING_ROD) item.setDurability((short) 61);
+        if (material == Material.FISHING_ROD) item.setDurability((short) 60);
         return item;
     }
 
