@@ -57,6 +57,10 @@ public class StrikeExecutor {
         return false;
     }
 
+    public boolean checkCooldownPublic(Player player, String type) {
+        return checkCooldown(player, type);
+    }
+
     private void setCooldown(Player player, String type) {
         int seconds = cfg.getCooldown(type);
         if (cfg.isCooldownsEnabled() && seconds > 0) {
@@ -70,12 +74,14 @@ public class StrikeExecutor {
             return;
         }
 
-        if (checkCooldown(player, type)) return;
+        if (checkCooldown(player, type)) {
+            return;
+        }
 
         setCooldown(player, type);
 
         if (!type.equals("chunkeater") && !cfg.getBoolean("rod.throw-rod", true)) {
-            consumeRodDelayed(player, item);
+            consumeRodImmediately(player, item);
         }
 
         UUID strikeId = UUID.randomUUID();
@@ -91,6 +97,32 @@ public class StrikeExecutor {
             }
             Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getStrikeTNT().remove(strikeId), 200L);
         });
+    }
+
+    private void consumeRodImmediately(Player player, ItemStack originalItem) {
+        if (originalItem == null) return;
+
+        String displayName = Objects.requireNonNull(originalItem.getItemMeta()).getDisplayName();
+
+        ItemStack main = player.getInventory().getItemInMainHand();
+        if (isMatchingRod(main, displayName)) {
+            main.setAmount(main.getAmount() - 1);
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1f, 1f);
+            return;
+        }
+
+        ItemStack off = player.getInventory().getItemInOffHand();
+        if (isMatchingRod(off, displayName)) {
+            off.setAmount(off.getAmount() - 1);
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1f, 1f);
+        }
+    }
+
+    private boolean isMatchingRod(ItemStack hand, String displayName) {
+        return hand != null
+                && hand.getType() == Material.FISHING_ROD
+                && hand.hasItemMeta()
+                && Objects.requireNonNull(hand.getItemMeta()).getDisplayName().equals(displayName);
     }
 
     public void executeChunkEater(Player player, Location target) {
@@ -115,26 +147,6 @@ public class StrikeExecutor {
         setCooldown(player, "stasis");
 
         stasisStrike.execute(player, item);
-    }
-
-    public void consumeRodDelayed(Player player, ItemStack originalItem) {
-        String displayName = Objects.requireNonNull(originalItem.getItemMeta()).getDisplayName();
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (!tryConsumeFrom(player.getInventory().getItemInMainHand(), displayName, player)) {
-                tryConsumeFrom(player.getInventory().getItemInOffHand(), displayName, player);
-            }
-        }, 1L);
-    }
-
-    private boolean tryConsumeFrom(ItemStack hand, String displayName, Player player) {
-        if (hand != null && hand.getType() == Material.FISHING_ROD
-                && hand.hasItemMeta()
-                && Objects.requireNonNull(hand.getItemMeta()).getDisplayName().equals(displayName)) {
-            hand.setAmount(hand.getAmount() - 1);
-            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1f, 1f);
-            return true;
-        }
-        return false;
     }
 
     public StasisStrike getStasisStrike() {

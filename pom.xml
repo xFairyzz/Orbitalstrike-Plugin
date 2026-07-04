@@ -6,7 +6,7 @@
 
     <groupId>dev.fairyzz</groupId>
     <artifactId>orbitalstrike</artifactId>
-    <version>1.6.7</version>
+    <version>1.6.8</version>
     <packaging>jar</packaging>
 
     <name>orbitalstrike</name>

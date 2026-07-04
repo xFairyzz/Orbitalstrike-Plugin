@@ -51,6 +51,10 @@ public class FishingRodListener implements Listener {
 
         String type = plugin.getPendingStrikes().remove(playerId);
 
+        if (executor.checkCooldownPublic(player, type)) {
+            return;
+        }
+
         if (type.equals("stasis")) {
             ItemStack main = player.getInventory().getItemInMainHand();
             ItemStack off = player.getInventory().getItemInOffHand();
