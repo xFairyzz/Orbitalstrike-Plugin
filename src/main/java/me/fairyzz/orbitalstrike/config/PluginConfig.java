@@ -48,11 +48,16 @@ public class PluginConfig {
         return disabled.contains("*") || disabled.contains(world.getName());
     }
 
+    public boolean isStrikeEnabled(String type) {
+        return cfg.getBoolean("strikes." + type.toLowerCase() + ".enabled", true);
+    }
+
     private void registerDefaults() {
         cfg.addDefault("permission", "orbital.use");
         addWorldDefaults();
         addCooldownDefaults();
         addRodDefaults();
+        addStrikeDefaults();
         addNukeDefaults();
         addStabDefaults();
         addDogsDefaults();
@@ -80,6 +85,18 @@ public class PluginConfig {
         rod.put("distance", 100);
         rod.put("throw-rod", true);
         cfg.addDefault("rod", rod);
+    }
+
+    private void addStrikeDefaults() {
+        Map<String, Boolean> strikes = new HashMap<>();
+        strikes.put("nuke.enabled", true);
+        strikes.put("stab.enabled", true);
+        strikes.put("dogs.enabled", true);
+        strikes.put("chunkeater.enabled", true);
+        strikes.put("stasis.enabled", true);
+        for (Map.Entry<String, Boolean> entry : strikes.entrySet()) {
+            cfg.addDefault("strikes." + entry.getKey(), entry.getValue());
+        }
     }
 
     private void addNukeDefaults() {

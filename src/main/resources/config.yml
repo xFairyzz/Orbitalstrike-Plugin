@@ -3,6 +3,18 @@ permission: "orbital.use"
 disabled-worlds:
   - ""
 
+strikes:
+  nuke:
+    enabled: true
+  stab:
+    enabled: true
+  dogs:
+    enabled: true
+  chunkeater:
+    enabled: true
+  stasis:
+    enabled: true
+
 cooldowns:
   enabled: false
   nuke: 300

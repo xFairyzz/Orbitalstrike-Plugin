@@ -53,8 +53,8 @@ public class OrbitalCommand implements CommandExecutor, TabCompleter {
         }
 
         String type = args[0].toLowerCase();
-        if (!isValidType(type)) {
-            player.sendMessage("§cInvalid strike type. Use: " + String.join(", ", STRIKE_TYPES));
+        if (isValidType(type)) {
+            player.sendMessage("§cInvalid strike type.");
             return true;
         }
 
@@ -101,8 +101,8 @@ public class OrbitalCommand implements CommandExecutor, TabCompleter {
         }
 
         String type = args[2].toLowerCase();
-        if (!isValidType(type)) {
-            sender.sendMessage("§cInvalid strike type. Use: " + String.join(", ", STRIKE_TYPES));
+        if (isValidType(type)) {
+            sender.sendMessage("§cInvalid strike type.");
             return true;
         }
 
@@ -139,7 +139,12 @@ public class OrbitalCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 1) {
             String input = args[0].toLowerCase();
-            List<String> opts = new ArrayList<>(Arrays.asList(STRIKE_TYPES));
+            List<String> opts = new ArrayList<>();
+            for (String t : STRIKE_TYPES) {
+                if (plugin.getPluginConfig().isStrikeEnabled(t)) {
+                    opts.add(t);
+                }
+            }
             opts.add("give");
             return opts.stream().filter(t -> t.startsWith(input)).sorted().collect(Collectors.toList());
         }
@@ -155,7 +160,13 @@ public class OrbitalCommand implements CommandExecutor, TabCompleter {
             }
             if (args.length == 3) {
                 String input = args[2].toLowerCase();
-                return Arrays.stream(STRIKE_TYPES)
+                List<String> enabled = new ArrayList<>();
+                for (String t : STRIKE_TYPES) {
+                    if (plugin.getPluginConfig().isStrikeEnabled(t)) {
+                        enabled.add(t);
+                    }
+                }
+                return enabled.stream()
                         .filter(t -> t.startsWith(input))
                         .sorted()
                         .collect(Collectors.toList());
@@ -184,6 +195,7 @@ public class OrbitalCommand implements CommandExecutor, TabCompleter {
     }
 
     private boolean isValidType(String type) {
-        return Arrays.asList(STRIKE_TYPES).contains(type);
+        if (!Arrays.asList(STRIKE_TYPES).contains(type)) return true;
+        return !plugin.getPluginConfig().isStrikeEnabled(type);
     }
 }

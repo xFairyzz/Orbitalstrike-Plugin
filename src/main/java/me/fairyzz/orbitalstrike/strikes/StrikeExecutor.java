@@ -69,6 +69,10 @@ public class StrikeExecutor {
     }
 
     public void execute(Player player, ItemStack item, String type, Location target) {
+        if (!cfg.isStrikeEnabled(type)) {
+            player.sendMessage("§cThis orbital strike is disabled.");
+            return;
+        }
         if (cfg.isWorldDisabled(target.getWorld())) {
             player.sendMessage("§cOrbitals are disabled in this world");
             return;
@@ -126,6 +130,10 @@ public class StrikeExecutor {
     }
 
     public void executeChunkEater(Player player, Location target) {
+        if (!cfg.isStrikeEnabled("chunkeater")) {
+            player.sendMessage("§cThis orbital strike is disabled.");
+            return;
+        }
         if (cfg.isWorldDisabled(target.getWorld())) {
             player.sendMessage("§cOrbitals are disabled in this world");
             return;
@@ -138,6 +146,10 @@ public class StrikeExecutor {
     }
 
     public void executeStasis(Player player, ItemStack item) {
+        if (!cfg.isStrikeEnabled("stasis")) {
+            player.sendMessage("§cThis orbital strike is disabled.");
+            return;
+        }
         if (cfg.isWorldDisabled(player.getWorld())) {
             player.sendMessage("§cOrbitals are disabled in this world");
             return;
@@ -147,9 +159,5 @@ public class StrikeExecutor {
         setCooldown(player, "stasis");
 
         stasisStrike.execute(player, item);
-    }
-
-    public StasisStrike getStasisStrike() {
-        return this.stasisStrike;
     }
 }

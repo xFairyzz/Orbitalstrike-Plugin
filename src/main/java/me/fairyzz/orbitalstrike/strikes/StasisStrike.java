@@ -24,6 +24,10 @@ public class StasisStrike {
     }
 
     public ItemStack create(double x, double y, double z) {
+        if (!plugin.getPluginConfig().isStrikeEnabled("stasis")) {
+            return null;
+        }
+
         ItemStack item = new ItemStack(Material.FISHING_ROD);
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;

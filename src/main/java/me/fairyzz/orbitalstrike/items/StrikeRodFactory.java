@@ -21,6 +21,9 @@ public class StrikeRodFactory {
     }
 
     public ItemStack create(String type, double x, double y, double z) {
+        if (!plugin.getPluginConfig().isStrikeEnabled(type)) {
+            return null;
+        }
         Material material = type.equals("chunkeater") ? Material.ARMOR_STAND : Material.FISHING_ROD;
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
