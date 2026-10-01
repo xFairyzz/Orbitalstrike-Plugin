@@ -104,6 +104,11 @@ dogs:
   effects:
     - "SPEED:1"
     - "STRENGTH:2"
+
+wither:
+  charged: false   # blue charged skulls
+  range: 8         # length of the rain (along where you look)
+  width: 8         # 1 = a line, same as range = a square
 ```
 
 

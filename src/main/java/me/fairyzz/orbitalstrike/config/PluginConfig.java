@@ -61,6 +61,7 @@ public class PluginConfig {
         addNukeDefaults();
         addStabDefaults();
         addDogsDefaults();
+        addWitherDefaults();
         cfg.options().copyDefaults(true);
     }
 
@@ -139,5 +140,16 @@ public class PluginConfig {
         effects.add("STRENGTH:2");
         dogs.put("effects", effects);
         cfg.addDefault("dogs", dogs);
+    }
+
+    private void addWitherDefaults() {
+        Map<String, Object> wither = new HashMap<>();
+        wither.put("charged", false);
+        wither.put("range", 8.0);
+        wither.put("width", 8.0);
+        cfg.addDefault("wither", wither);
+        cfg.addDefault("wither.charged", false);
+        cfg.addDefault("wither.range", 8.0);
+        cfg.addDefault("wither.width", 8.0);
     }
 }

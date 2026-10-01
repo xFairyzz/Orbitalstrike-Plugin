@@ -1,6 +1,7 @@
 package me.fairyzz.orbitalstrike.strikes;
 
 import me.fairyzz.orbitalstrike.OrbitalStrikePlugin;
+import me.fairyzz.orbitalstrike.config.PluginConfig;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -16,18 +17,32 @@ public class WitherStrike {
     private static final int INTERVAL = 8;
     private static final int PER_BURST = 3;
     private static final double HEIGHT = 28;
-    private static final double SPREAD = 4;
-    private static final double RANGE = 48;
+    private static final double TRACK_RANGE = 48;
     private static final double SPEED = 1.2;
 
     private final OrbitalStrikePlugin plugin;
+    private final PluginConfig cfg;
 
     public WitherStrike(OrbitalStrikePlugin plugin) {
         this.plugin = plugin;
+        this.cfg = plugin.getPluginConfig();
     }
 
     public void spawn(World world, Location center, Player caster) {
         UUID casterId = caster.getUniqueId();
+        boolean charged = cfg.getBoolean("wither.charged", false);
+        double range = Math.max(cfg.getDouble("wither.range", 8), 1);
+        double width = Math.max(cfg.getDouble("wither.width", 8), 1);
+
+        Vector forward = caster.getLocation().getDirection().setY(0);
+        if (forward.lengthSquared() < 0.01) forward = new Vector(0, 0, 1);
+        else forward.normalize();
+        Vector right = forward.clone().crossProduct(new Vector(0, 1, 0));
+        if (right.lengthSquared() < 0.01) right = new Vector(1, 0, 0);
+        else right.normalize();
+
+        Vector alongAxis = forward.clone();
+        Vector sideAxis = right.clone();
 
         new BukkitRunnable() {
             int elapsed = 0;
@@ -43,9 +58,14 @@ public class WitherStrike {
                 Location aim = prey != null ? prey.getLocation() : center;
 
                 for (int i = 0; i < PER_BURST; i++) {
-                    double ox = (Math.random() - 0.5) * 2 * SPREAD;
-                    double oz = (Math.random() - 0.5) * 2 * SPREAD;
-                    Location spawn = new Location(world, aim.getX() + ox, aim.getY() + HEIGHT, aim.getZ() + oz);
+                    double along = (Math.random() - 0.5) * range;
+                    double side = (Math.random() - 0.5) * width;
+                    Location spawn = new Location(
+                            world,
+                            aim.getX() + alongAxis.getX() * along + sideAxis.getX() * side,
+                            aim.getY() + HEIGHT,
+                            aim.getZ() + alongAxis.getZ() * along + sideAxis.getZ() * side
+                    );
 
                     Vector dir = new Vector(0, -1, 0);
                     if (prey != null) {
@@ -54,7 +74,7 @@ public class WitherStrike {
                     }
 
                     WitherSkull skull = world.spawn(spawn, WitherSkull.class);
-                    skull.setCharged(false);
+                    skull.setCharged(charged);
                     skull.setYield(1.0f);
                     skull.setBounce(false);
                     skull.setInvulnerable(true);
@@ -69,7 +89,7 @@ public class WitherStrike {
 
     private Player nearestPlayer(World world, Location center, UUID casterId) {
         Player best = null;
-        double bestDist = RANGE * RANGE;
+        double bestDist = TRACK_RANGE * TRACK_RANGE;
         for (Player p : world.getPlayers()) {
             if (p.getUniqueId().equals(casterId) || p.isDead() || !p.isValid()) continue;
             double d = p.getLocation().distanceSquared(center);

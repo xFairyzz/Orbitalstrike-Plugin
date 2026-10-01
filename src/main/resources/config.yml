@@ -56,3 +56,8 @@ dogs:
   effects:
     - "SPEED:1"
     - "STRENGTH:2"
+
+wither:
+  charged: false
+  range: 8
+  width: 8
