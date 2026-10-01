@@ -109,6 +109,8 @@ wither:
   charged: false   # blue charged skulls
   range: 8         # length of the rain (along where you look)
   width: 8         # 1 = a line, same as range = a square
+  speed: 1.2       # skull travel speed
+  skulls: 3        # skulls spawned per burst
 ```
 
 

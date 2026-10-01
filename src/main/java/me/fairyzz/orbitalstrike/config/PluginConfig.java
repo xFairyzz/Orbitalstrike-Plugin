@@ -147,9 +147,13 @@ public class PluginConfig {
         wither.put("charged", false);
         wither.put("range", 8.0);
         wither.put("width", 8.0);
+        wither.put("speed", 1.2);
+        wither.put("skulls", 3);
         cfg.addDefault("wither", wither);
         cfg.addDefault("wither.charged", false);
         cfg.addDefault("wither.range", 8.0);
         cfg.addDefault("wither.width", 8.0);
+        cfg.addDefault("wither.speed", 1.2);
+        cfg.addDefault("wither.skulls", 3);
     }
 }

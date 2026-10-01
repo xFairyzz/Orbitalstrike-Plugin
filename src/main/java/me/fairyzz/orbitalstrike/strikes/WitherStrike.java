@@ -15,10 +15,8 @@ public class WitherStrike {
 
     private static final int DURATION = 600;
     private static final int INTERVAL = 8;
-    private static final int PER_BURST = 3;
     private static final double HEIGHT = 28;
     private static final double TRACK_RANGE = 48;
-    private static final double SPEED = 1.2;
 
     private final OrbitalStrikePlugin plugin;
     private final PluginConfig cfg;
@@ -33,6 +31,8 @@ public class WitherStrike {
         boolean charged = cfg.getBoolean("wither.charged", false);
         double range = Math.max(cfg.getDouble("wither.range", 8), 1);
         double width = Math.max(cfg.getDouble("wither.width", 8), 1);
+        double speed = Math.max(cfg.getDouble("wither.speed", 1.2), 0.1);
+        int skulls = Math.max(cfg.getInt("wither.skulls", 3), 1);
 
         Vector forward = caster.getLocation().getDirection().setY(0);
         if (forward.lengthSquared() < 0.01) forward = new Vector(0, 0, 1);
@@ -57,7 +57,7 @@ public class WitherStrike {
                 Player prey = nearestPlayer(world, center, casterId);
                 Location aim = prey != null ? prey.getLocation() : center;
 
-                for (int i = 0; i < PER_BURST; i++) {
+                for (int i = 0; i < skulls; i++) {
                     double along = (Math.random() - 0.5) * range;
                     double side = (Math.random() - 0.5) * width;
                     Location spawn = new Location(
@@ -79,7 +79,7 @@ public class WitherStrike {
                     skull.setBounce(false);
                     skull.setInvulnerable(true);
                     skull.setDirection(dir);
-                    skull.setVelocity(dir.multiply(SPEED));
+                    skull.setVelocity(dir.multiply(speed));
                 }
 
                 elapsed += INTERVAL;

@@ -61,3 +61,5 @@ wither:
   charged: false
   range: 8
   width: 8
+  speed: 1.2
+  skulls: 3
