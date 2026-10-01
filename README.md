@@ -111,6 +111,7 @@ wither:
   width: 8         # 1 = a line, same as range = a square
   speed: 1.2       # skull travel speed
   skulls: 3        # skulls spawned per burst
+  duration-ticks: 600  # how long it runs (20 ticks = 1s, 600 = 30s)
 ```
 
 

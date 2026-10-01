@@ -63,3 +63,4 @@ wither:
   width: 8
   speed: 1.2
   skulls: 3
+  duration-ticks: 600

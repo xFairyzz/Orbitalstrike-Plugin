@@ -2,6 +2,7 @@ package me.fairyzz.orbitalstrike.strikes;
 
 import me.fairyzz.orbitalstrike.OrbitalStrikePlugin;
 import me.fairyzz.orbitalstrike.config.PluginConfig;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -13,7 +14,6 @@ import java.util.UUID;
 
 public class WitherStrike {
 
-    private static final int DURATION = 600;
     private static final int INTERVAL = 8;
     private static final double HEIGHT = 28;
     private static final double TRACK_RANGE = 48;
@@ -33,6 +33,7 @@ public class WitherStrike {
         double width = Math.max(cfg.getDouble("wither.width", 8), 1);
         double speed = Math.max(cfg.getDouble("wither.speed", 1.2), 0.1);
         int skulls = Math.max(cfg.getInt("wither.skulls", 3), 1);
+        int duration = Math.max(cfg.getInt("wither.duration-ticks", 600), 1);
 
         Vector forward = caster.getLocation().getDirection().setY(0);
         if (forward.lengthSquared() < 0.01) forward = new Vector(0, 0, 1);
@@ -46,15 +47,17 @@ public class WitherStrike {
 
         new BukkitRunnable() {
             int elapsed = 0;
+            UUID preyId = null;
+            Location huntFrom = center.clone();
 
             @Override
             public void run() {
-                if (elapsed >= DURATION) {
+                if (elapsed >= duration) {
                     cancel();
                     return;
                 }
 
-                Player prey = nearestPlayer(world, center, casterId);
+                Player prey = currentPrey();
                 Location aim = prey != null ? prey.getLocation() : center;
 
                 for (int i = 0; i < skulls; i++) {
@@ -84,20 +87,47 @@ public class WitherStrike {
 
                 elapsed += INTERVAL;
             }
+
+            private Player currentPrey() {
+                if (preyId != null) {
+                    Player locked = plugin.getServer().getPlayer(preyId);
+                    if (isTrackable(locked, casterId)) {
+                        huntFrom = locked.getLocation();
+                        return locked;
+                    }
+                    preyId = null;
+                }
+                Player next = nearestPlayer(world, huntFrom, casterId);
+                if (next != null) {
+                    preyId = next.getUniqueId();
+                    huntFrom = next.getLocation();
+                }
+                return next;
+            }
         }.runTaskTimer(plugin, 0L, INTERVAL);
     }
 
-    private Player nearestPlayer(World world, Location center, UUID casterId) {
+    private Player nearestPlayer(World world, Location from, UUID casterId) {
         Player best = null;
         double bestDist = TRACK_RANGE * TRACK_RANGE;
         for (Player p : world.getPlayers()) {
-            if (p.getUniqueId().equals(casterId) || p.isDead() || !p.isValid()) continue;
-            double d = p.getLocation().distanceSquared(center);
+            if (!isTrackable(p, casterId)) continue;
+            double d = p.getLocation().distanceSquared(from);
             if (d < bestDist) {
                 bestDist = d;
                 best = p;
             }
         }
         return best;
+    }
+
+    private boolean isTrackable(Player p, UUID casterId) {
+        return p != null
+                && p.isOnline()
+                && p.isValid()
+                && !p.isDead()
+                && p.getHealth() > 0
+                && p.getGameMode() != GameMode.SPECTATOR
+                && !p.getUniqueId().equals(casterId);
     }
 }
