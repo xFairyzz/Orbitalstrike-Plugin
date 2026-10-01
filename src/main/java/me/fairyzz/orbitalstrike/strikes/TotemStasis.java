@@ -56,7 +56,6 @@ public class TotemStasis {
             Map<Integer, ItemStack> leftover = player.getInventory().addItem(totem);
             leftover.values().forEach(drop -> player.getWorld().dropItemNaturally(player.getLocation(), drop));
         }
-        player.sendMessage("§aTotem stasis bound to §f" + (int) x + " " + (int) y + " " + (int) z);
     }
 
     public boolean isStasisTotem(ItemStack item) {
