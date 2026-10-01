@@ -8,6 +8,8 @@ A Plugin for **Minecraft 1.21 - 26.2** featuring Orbitals:
 - `/orbital give [playername] [type]` | Gives other Players a Rod |
 - `/orbital dogs` → **50+ wolves ready to Help you**
 - `/orbital stasis [coords]` → **if you need a quick escape**
+- `/orbital totem [coords]` → **Totem of Undying that teleports you on pop**
+- `/orbital wither` → **Wither skulls rain from above for 30 seconds**
 - `/orbital chunkeater` → **Armorstand ready to destroy the whole Chunk**
 ---
 
@@ -18,9 +20,11 @@ A Plugin for **Minecraft 1.21 - 26.2** featuring Orbitals:
 | **Nuke Strike** | 10 rings + center, all TNT drops simultaneously from above, explodes **2 seconds after impact** |
 | **Stab Strike** | Instant tunnel straight down to bedrock                                                         |
 | **Dogs Strike** | Summons **50+ tamed wolves** with **Speed II + Strength II and Armor**                          |
+| **Wither Cannon** | Wither skulls shoot from above for **at least 30 seconds**                                      |
+| **Totem Stasis** | Special totem — when it pops you teleport to the coords you set                                 |
 | **Chunkeater** | Powerful Armorstand that destroys a whole Chunk                                                 |
 | **One-Time Use** | Rod breaks after single use                                                                     |
-| **Fully Configurable** | `config.yml` for rings, yield, height, delay                                                    |
+| **Fully Configurable** | `config.yml` for rings, yield, height, delay, TNT block damage                                  |
 | **Permission System** | `orbital.use` — easy with LuckPerms                                                             |
 | **No Cooldown** | Spam allowed (can crash or lag the Server)                                                      |
 
@@ -28,7 +32,7 @@ A Plugin for **Minecraft 1.21 - 26.2** featuring Orbitals:
 
 ## Installation
 
-1. Download `OrbitalStrike-1.6.7.jar`
+1. Download `OrbitalStrike-1.7.0.jar`
 2. Place it in your `plugins/` folder
 3. Go into **"spigot.yml"** and set **"max-tnt-per-tick"** to **1000** else it might cause problems
 4. **Start the server**
@@ -43,8 +47,10 @@ A Plugin for **Minecraft 1.21 - 26.2** featuring Orbitals:
 | `/orbital nuke` | Gives you a **Nuke Rod** |
 | `/orbital stab` | Gives you a **Stab Rod** |
 | `/orbital dogs` | Gives you a **Dog Rod** |
+| `/orbital wither` | Gives you a **Wither Rod** |
 | `/orbital give [playername] [type]` | Gives other Players a Rod |
 | `/orbital stasis [coords]` | Gives you a **Stasis Rod** |
+| `/orbital totem [coords]` | Gives you a **Stasis Totem** |
 | `/orbital chunkeater` | Gives you a **Chunkeater Armorstand** |
 
 > **Permission:** `orbital.use`  
@@ -68,6 +74,8 @@ cooldowns:
   dogs: 180
   chunkeater: 600
   stasis: 240
+  wither: 240
+  totem: 240
 
 rod:
   distance: 100
@@ -83,9 +91,11 @@ nuke:
   center-tnt: true
   Animated-rings: true
   damaged-rings: true
+  break-blocks: true   # false = damages players, not blocks
 
 stab:
   yield: 4.0
+  break-blocks: true   # false = damages players, not blocks
 
 dogs:
   count: 50
@@ -94,6 +104,16 @@ dogs:
   effects:
     - "SPEED:1"
     - "STRENGTH:2"
+
+wither:
+  duration-ticks: 600   # 30 seconds (minimum)
+  interval-ticks: 8
+  per-burst: 3
+  height: 28
+  radius: 8.0
+  charged: false
+  yield: 1.0
+  speed: 1.2
 ```
 
 

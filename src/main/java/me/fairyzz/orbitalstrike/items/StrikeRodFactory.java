@@ -56,6 +56,7 @@ public class StrikeRodFactory {
             case "Dogs"         -> "dogs";
             case "Chunk Eater"  -> "chunkeater";
             case "Stasis"       -> "stasis";
+            case "Wither shot"  -> "wither";
             default             -> null;
         };
     }
@@ -67,6 +68,7 @@ public class StrikeRodFactory {
             case "dogs"       -> "Dogs";
             case "chunkeater" -> "Chunk Eater";
             case "stasis"     -> "Stasis";
+            case "wither"     -> "Wither shot";
             default           -> "Orbital Strike Rod";
         };
     }

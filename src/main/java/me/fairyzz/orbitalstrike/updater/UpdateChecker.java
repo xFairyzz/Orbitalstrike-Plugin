@@ -15,7 +15,7 @@ import java.net.URL;
 public class UpdateChecker implements Listener {
 
     private static final String GITHUB_REPO     = "xFairyzz/Orbitalstrike-Plugin";
-    private static final String CURRENT_VERSION = "v1.6.8";
+    private static final String CURRENT_VERSION = "v1.7.0";
 
     private final OrbitalStrikePlugin plugin;
     private boolean hasUpdate     = false;

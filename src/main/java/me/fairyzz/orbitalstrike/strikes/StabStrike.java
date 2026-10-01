@@ -7,12 +7,13 @@ import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.TNTPrimed;
 
-@SuppressWarnings("ClassCanBeRecord")
 public class StabStrike {
 
+    private final OrbitalStrikePlugin plugin;
     private final PluginConfig cfg;
 
     public StabStrike(OrbitalStrikePlugin plugin) {
+        this.plugin = plugin;
         this.cfg = plugin.getPluginConfig();
     }
 
@@ -35,8 +36,9 @@ public class StabStrike {
     private void spawnTNT(World world, Location loc, float yield) {
         if (loc.getBlock().isLiquid()) return;
         TNTPrimed tnt = (TNTPrimed) world.spawnEntity(loc, EntityType.TNT);
-        tnt.setFuseTicks(0);
+        plugin.tagStrikeTNT(tnt, "stab");
         tnt.setYield(yield);
+        tnt.setFuseTicks(0);
     }
 
     private Location findGround(World world, Location start) {

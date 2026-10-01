@@ -3,6 +3,7 @@ package me.fairyzz.orbitalstrike.commands;
 import me.fairyzz.orbitalstrike.OrbitalStrikePlugin;
 import me.fairyzz.orbitalstrike.items.StrikeRodFactory;
 import me.fairyzz.orbitalstrike.strikes.StasisStrike;
+import me.fairyzz.orbitalstrike.strikes.TotemStasis;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -19,16 +20,19 @@ import java.util.stream.Collectors;
 
 public class OrbitalCommand implements CommandExecutor, TabCompleter {
 
-    private static final String[] STRIKE_TYPES = {"nuke", "stab", "dogs", "chunkeater", "stasis"};
+    private static final String[] STRIKE_TYPES = {"nuke", "stab", "dogs", "chunkeater", "stasis", "wither", "totem"};
+    private static final List<String> COORD_TYPES = List.of("stasis", "totem");
 
     private final OrbitalStrikePlugin plugin;
     private final StrikeRodFactory rodFactory;
     private final StasisStrike stasisStrike;
+    private final TotemStasis totemStasis;
 
     public OrbitalCommand(OrbitalStrikePlugin plugin) {
         this.plugin = plugin;
         this.rodFactory = new StrikeRodFactory(plugin);
         this.stasisStrike = new StasisStrike(plugin);
+        this.totemStasis = new TotemStasis(plugin);
     }
 
     @Override
@@ -58,28 +62,15 @@ public class OrbitalCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (type.equals("stasis")) {
-            if (args.length != 4) {
-                player.sendMessage("§cUsage: /orbital stasis <x> <y> <z>");
-                return true;
-            }
-            try {
-                double x = Double.parseDouble(args[1]);
-                double y = Double.parseDouble(args[2]);
-                double z = Double.parseDouble(args[3]);
-                stasisStrike.storeLocation(player.getUniqueId(), new Location(player.getWorld(), x, y, z));
-                player.getInventory().addItem(stasisStrike.create(x, y, z));
-            } catch (NumberFormatException e) {
-                player.sendMessage("§cInvalid coordinates!");
-            }
-        } else {
-            if (args.length != 1) {
-                player.sendMessage("§cUsage: /orbital " + type);
-                return true;
-            }
-            player.getInventory().addItem(rodFactory.create(type));
+        if (COORD_TYPES.contains(type)) {
+            return giveCoordItem(sender, player, type, args, 1);
         }
 
+        if (args.length != 1) {
+            player.sendMessage("§cUsage: /orbital " + type);
+            return true;
+        }
+        player.getInventory().addItem(rodFactory.create(type));
         return true;
     }
 
@@ -106,30 +97,41 @@ public class OrbitalCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (type.equals("stasis")) {
-            if (args.length != 6) {
-                sender.sendMessage("§cUsage: /orbital give <player> stasis <x> <y> <z>");
-                return true;
-            }
-            try {
-                double x = Double.parseDouble(args[3]);
-                double y = Double.parseDouble(args[4]);
-                double z = Double.parseDouble(args[5]);
-                stasisStrike.storeLocation(target.getUniqueId(), new Location(target.getWorld(), x, y, z));
-                target.getInventory().addItem(stasisStrike.create(x, y, z));
-                sender.sendMessage("§aGave Stasis rod to " + target.getName());
-            } catch (NumberFormatException e) {
-                sender.sendMessage("§cInvalid coordinates!");
-            }
-        } else {
-            if (args.length != 3) {
-                sender.sendMessage("§cUsage: /orbital give <player> " + type);
-                return true;
-            }
-            target.getInventory().addItem(rodFactory.create(type));
-            sender.sendMessage("§aGave " + type + " rod to " + target.getName());
+        if (COORD_TYPES.contains(type)) {
+            return giveCoordItem(sender, target, type, args, 3);
         }
 
+        if (args.length != 3) {
+            sender.sendMessage("§cUsage: /orbital give <player> " + type);
+            return true;
+        }
+        target.getInventory().addItem(rodFactory.create(type));
+        sender.sendMessage("§aGave " + type + " rod to " + target.getName());
+        return true;
+    }
+
+    private boolean giveCoordItem(CommandSender sender, Player target, String type, String[] args, int coordIndex) {
+        if (args.length != coordIndex + 3) {
+            String prefix = coordIndex == 1 ? "/orbital " + type : "/orbital give <player> " + type;
+            sender.sendMessage("§cUsage: " + prefix + " <x> <y> <z>");
+            return true;
+        }
+        try {
+            double x = Double.parseDouble(args[coordIndex]);
+            double y = Double.parseDouble(args[coordIndex + 1]);
+            double z = Double.parseDouble(args[coordIndex + 2]);
+            if (type.equals("totem")) {
+                totemStasis.give(target, x, y, z);
+            } else {
+                stasisStrike.storeLocation(target.getUniqueId(), new Location(target.getWorld(), x, y, z));
+                target.getInventory().addItem(stasisStrike.create(x, y, z));
+            }
+            if (sender != target) {
+                sender.sendMessage("§aGave " + type + " to " + target.getName());
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage("§cInvalid coordinates!");
+        }
         return true;
     }
 
@@ -171,26 +173,24 @@ public class OrbitalCommand implements CommandExecutor, TabCompleter {
                         .sorted()
                         .collect(Collectors.toList());
             }
-            if (args.length >= 4 && args[2].equalsIgnoreCase("stasis")) {
-                if (args.length >= 6) return Collections.emptyList();
-                List<String> hints = new ArrayList<>();
-                if (args.length == 4) hints.add("<x>");
-                if (args.length == 5) hints.add("<y>");
-                if (args.length == 6) hints.add("<z>");
-                return hints;
+            if (args.length >= 4 && COORD_TYPES.contains(args[2].toLowerCase())) {
+                return coordHint(args.length - 3);
             }
             return Collections.emptyList();
         }
 
-        if (args.length > 1 && args[0].equalsIgnoreCase("stasis")) {
-            if (args.length >= 5) return Collections.emptyList();
-            List<String> hints = new ArrayList<>();
-            if (args.length == 2) hints.add("<x>");
-            if (args.length == 3) hints.add("<y>");
-            if (args.length == 4) hints.add("<z>");
-            return hints;
+        if (args.length > 1 && COORD_TYPES.contains(args[0].toLowerCase())) {
+            return coordHint(args.length - 1);
         }
 
+        return Collections.emptyList();
+    }
+
+    private List<String> coordHint(int coordArg) {
+        if (coordArg >= 4) return Collections.emptyList();
+        if (coordArg == 1) return List.of("<x>");
+        if (coordArg == 2) return List.of("<y>");
+        if (coordArg == 3) return List.of("<z>");
         return Collections.emptyList();
     }
 

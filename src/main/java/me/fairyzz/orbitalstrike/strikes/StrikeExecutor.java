@@ -27,6 +27,7 @@ public class StrikeExecutor {
     private final DogsStrike dogsStrike;
     private final ChunkEaterStrike chunkEaterStrike;
     private final StasisStrike stasisStrike;
+    private final WitherStrike witherStrike;
 
     public StrikeExecutor(OrbitalStrikePlugin plugin) {
         this.plugin = plugin;
@@ -38,6 +39,7 @@ public class StrikeExecutor {
         this.dogsStrike = new DogsStrike(plugin);
         this.chunkEaterStrike = new ChunkEaterStrike(plugin);
         this.stasisStrike = new StasisStrike(plugin);
+        this.witherStrike = new WitherStrike(plugin);
     }
 
     private boolean checkCooldown(Player player, String type) {
@@ -98,6 +100,7 @@ public class StrikeExecutor {
                 case "stab" -> stabStrike.spawn(target.getWorld(), target);
                 case "dogs" -> dogsStrike.spawn(target.getWorld(), target, player);
                 case "chunkeater" -> chunkEaterStrike.spawn(target.getWorld(), target);
+                case "wither" -> witherStrike.spawn(target.getWorld(), target);
             }
             Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getStrikeTNT().remove(strikeId), 200L);
         });
