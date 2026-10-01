@@ -56,13 +56,3 @@ dogs:
   effects:
     - "SPEED:1"
     - "STRENGTH:2"
-
-wither:
-  duration-ticks: 600
-  interval-ticks: 8
-  per-burst: 3
-  height: 28
-  radius: 8.0
-  charged: false
-  yield: 1.0
-  speed: 1.2

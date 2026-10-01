@@ -9,7 +9,7 @@ A Plugin for **Minecraft 1.21 - 26.2** featuring Orbitals:
 - `/orbital dogs` → **50+ wolves ready to Help you**
 - `/orbital stasis [coords]` → **if you need a quick escape**
 - `/orbital totem [coords]` → **Totem of Undying that teleports you on pop**
-- `/orbital wither` → **Wither skulls rain from above for 30 seconds**
+- `/orbital wither` → **Wither skulls rain from above for 30 seconds, tracking nearby players**
 - `/orbital chunkeater` → **Armorstand ready to destroy the whole Chunk**
 ---
 
@@ -20,8 +20,8 @@ A Plugin for **Minecraft 1.21 - 26.2** featuring Orbitals:
 | **Nuke Strike** | 10 rings + center, all TNT drops simultaneously from above, explodes **2 seconds after impact** |
 | **Stab Strike** | Instant tunnel straight down to bedrock                                                         |
 | **Dogs Strike** | Summons **50+ tamed wolves** with **Speed II + Strength II and Armor**                          |
-| **Wither Cannon** | Wither skulls shoot from above for **at least 30 seconds**                                      |
-| **Totem Stasis** | Special totem — when it pops you teleport to the coords you set                                 |
+| **Wither Cannon** | Wither skulls from above for **30 seconds**, tracks the nearest player (never the caster)        |
+| **Totem Stasis** | Vanilla-looking **Totem stasis** — pops and teleports you to the coords you set                 |
 | **Chunkeater** | Powerful Armorstand that destroys a whole Chunk                                                 |
 | **One-Time Use** | Rod breaks after single use                                                                     |
 | **Fully Configurable** | `config.yml` for rings, yield, height, delay, TNT block damage                                  |
@@ -50,7 +50,7 @@ A Plugin for **Minecraft 1.21 - 26.2** featuring Orbitals:
 | `/orbital wither` | Gives you a **Wither Rod** |
 | `/orbital give [playername] [type]` | Gives other Players a Rod |
 | `/orbital stasis [coords]` | Gives you a **Stasis Rod** |
-| `/orbital totem [coords]` | Gives you a **Stasis Totem** |
+| `/orbital totem [coords]` | Gives you a **Totem stasis** |
 | `/orbital chunkeater` | Gives you a **Chunkeater Armorstand** |
 
 > **Permission:** `orbital.use`  
@@ -104,16 +104,6 @@ dogs:
   effects:
     - "SPEED:1"
     - "STRENGTH:2"
-
-wither:
-  duration-ticks: 600   # 30 seconds (minimum)
-  interval-ticks: 8
-  per-burst: 3
-  height: 28
-  radius: 8.0
-  charged: false
-  yield: 1.0
-  speed: 1.2
 ```
 
 

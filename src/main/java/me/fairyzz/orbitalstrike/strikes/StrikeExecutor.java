@@ -100,7 +100,7 @@ public class StrikeExecutor {
                 case "stab" -> stabStrike.spawn(target.getWorld(), target);
                 case "dogs" -> dogsStrike.spawn(target.getWorld(), target, player);
                 case "chunkeater" -> chunkEaterStrike.spawn(target.getWorld(), target);
-                case "wither" -> witherStrike.spawn(target.getWorld(), target);
+                case "wither" -> witherStrike.spawn(target.getWorld(), target, player);
             }
             Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getStrikeTNT().remove(strikeId), 200L);
         });

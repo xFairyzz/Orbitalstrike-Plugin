@@ -1,7 +1,6 @@
 package me.fairyzz.orbitalstrike.strikes;
 
 import me.fairyzz.orbitalstrike.OrbitalStrikePlugin;
-import me.fairyzz.orbitalstrike.items.StrikeRodFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -13,7 +12,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.List;
 import java.util.Map;
 
 public class TotemStasis {
@@ -37,12 +35,7 @@ public class TotemStasis {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
 
-        meta.setDisplayName("§6Stasis Totem");
-        meta.setLore(List.of(
-                "§7Pop this totem to teleport",
-                "§8" + (int) x + " " + (int) y + " " + (int) z
-        ));
-        meta.setCustomModelData(StrikeRodFactory.CUSTOM_MODEL_DATA);
+        meta.setDisplayName("Totem stasis");
 
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         pdc.set(markerKey, PersistentDataType.BYTE, (byte) 1);
@@ -63,7 +56,7 @@ public class TotemStasis {
             Map<Integer, ItemStack> leftover = player.getInventory().addItem(totem);
             leftover.values().forEach(drop -> player.getWorld().dropItemNaturally(player.getLocation(), drop));
         }
-        player.sendMessage("§aStasis Totem bound to §f" + (int) x + " " + (int) y + " " + (int) z);
+        player.sendMessage("§aTotem stasis bound to §f" + (int) x + " " + (int) y + " " + (int) z);
     }
 
     public boolean isStasisTotem(ItemStack item) {
