@@ -48,14 +48,20 @@ public class PluginConfig {
         return disabled.contains("*") || disabled.contains(world.getName());
     }
 
+    public boolean isStrikeEnabled(String type) {
+        return cfg.getBoolean("strikes." + type.toLowerCase() + ".enabled", true);
+    }
+
     private void registerDefaults() {
         cfg.addDefault("permission", "orbital.use");
         addWorldDefaults();
         addCooldownDefaults();
         addRodDefaults();
+        addStrikeDefaults();
         addNukeDefaults();
         addStabDefaults();
         addDogsDefaults();
+        addWitherDefaults();
         cfg.options().copyDefaults(true);
     }
 
@@ -72,6 +78,8 @@ public class PluginConfig {
         cooldowns.put("dogs", 180);
         cooldowns.put("chunkeater", 600);
         cooldowns.put("stasis", 240);
+        cooldowns.put("wither", 240);
+        cooldowns.put("totem", 240);
         cfg.addDefault("cooldowns", cooldowns);
     }
 
@@ -80,6 +88,20 @@ public class PluginConfig {
         rod.put("distance", 100);
         rod.put("throw-rod", true);
         cfg.addDefault("rod", rod);
+    }
+
+    private void addStrikeDefaults() {
+        Map<String, Boolean> strikes = new HashMap<>();
+        strikes.put("nuke.enabled", true);
+        strikes.put("stab.enabled", true);
+        strikes.put("dogs.enabled", true);
+        strikes.put("chunkeater.enabled", true);
+        strikes.put("stasis.enabled", true);
+        strikes.put("wither.enabled", true);
+        strikes.put("totem.enabled", true);
+        for (Map.Entry<String, Boolean> entry : strikes.entrySet()) {
+            cfg.addDefault("strikes." + entry.getKey(), entry.getValue());
+        }
     }
 
     private void addNukeDefaults() {
@@ -93,13 +115,19 @@ public class PluginConfig {
         nuke.put("center-tnt", true);
         nuke.put("Animated-rings", true);
         nuke.put("damaged-rings", true);
+        nuke.put("break-blocks", true);
         cfg.addDefault("nuke", nuke);
+        cfg.addDefault("nuke.break-blocks", true);
+
     }
 
     private void addStabDefaults() {
         Map<String, Object> stab = new HashMap<>();
         stab.put("yield", 4.0);
+        stab.put("break-blocks", true);
         cfg.addDefault("stab", stab);
+        cfg.addDefault("stab.break-blocks", true);
+
     }
 
     private void addDogsDefaults() {
@@ -112,5 +140,22 @@ public class PluginConfig {
         effects.add("STRENGTH:2");
         dogs.put("effects", effects);
         cfg.addDefault("dogs", dogs);
+    }
+
+    private void addWitherDefaults() {
+        Map<String, Object> wither = new HashMap<>();
+        wither.put("charged", false);
+        wither.put("range", 8.0);
+        wither.put("width", 8.0);
+        wither.put("speed", 1.2);
+        wither.put("skulls", 3);
+        wither.put("duration-ticks", 600);
+        cfg.addDefault("wither", wither);
+        cfg.addDefault("wither.charged", false);
+        cfg.addDefault("wither.range", 8.0);
+        cfg.addDefault("wither.width", 8.0);
+        cfg.addDefault("wither.speed", 1.2);
+        cfg.addDefault("wither.skulls", 3);
+        cfg.addDefault("wither.duration-ticks", 600);
     }
 }

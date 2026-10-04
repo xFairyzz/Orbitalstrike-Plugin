@@ -27,6 +27,7 @@ public class StrikeExecutor {
     private final DogsStrike dogsStrike;
     private final ChunkEaterStrike chunkEaterStrike;
     private final StasisStrike stasisStrike;
+    private final WitherStrike witherStrike;
 
     public StrikeExecutor(OrbitalStrikePlugin plugin) {
         this.plugin = plugin;
@@ -38,6 +39,7 @@ public class StrikeExecutor {
         this.dogsStrike = new DogsStrike(plugin);
         this.chunkEaterStrike = new ChunkEaterStrike(plugin);
         this.stasisStrike = new StasisStrike(plugin);
+        this.witherStrike = new WitherStrike(plugin);
     }
 
     private boolean checkCooldown(Player player, String type) {
@@ -69,6 +71,10 @@ public class StrikeExecutor {
     }
 
     public void execute(Player player, ItemStack item, String type, Location target) {
+        if (!cfg.isStrikeEnabled(type)) {
+            player.sendMessage("§cThis orbital strike is disabled.");
+            return;
+        }
         if (cfg.isWorldDisabled(target.getWorld())) {
             player.sendMessage("§cOrbitals are disabled in this world");
             return;
@@ -94,6 +100,7 @@ public class StrikeExecutor {
                 case "stab" -> stabStrike.spawn(target.getWorld(), target);
                 case "dogs" -> dogsStrike.spawn(target.getWorld(), target, player);
                 case "chunkeater" -> chunkEaterStrike.spawn(target.getWorld(), target);
+                case "wither" -> witherStrike.spawn(target.getWorld(), target, player);
             }
             Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getStrikeTNT().remove(strikeId), 200L);
         });
@@ -126,6 +133,10 @@ public class StrikeExecutor {
     }
 
     public void executeChunkEater(Player player, Location target) {
+        if (!cfg.isStrikeEnabled("chunkeater")) {
+            player.sendMessage("§cThis orbital strike is disabled.");
+            return;
+        }
         if (cfg.isWorldDisabled(target.getWorld())) {
             player.sendMessage("§cOrbitals are disabled in this world");
             return;
@@ -138,6 +149,10 @@ public class StrikeExecutor {
     }
 
     public void executeStasis(Player player, ItemStack item) {
+        if (!cfg.isStrikeEnabled("stasis")) {
+            player.sendMessage("§cThis orbital strike is disabled.");
+            return;
+        }
         if (cfg.isWorldDisabled(player.getWorld())) {
             player.sendMessage("§cOrbitals are disabled in this world");
             return;
@@ -147,9 +162,5 @@ public class StrikeExecutor {
         setCooldown(player, "stasis");
 
         stasisStrike.execute(player, item);
-    }
-
-    public StasisStrike getStasisStrike() {
-        return this.stasisStrike;
     }
 }

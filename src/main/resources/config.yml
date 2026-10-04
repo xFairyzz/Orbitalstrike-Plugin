@@ -3,6 +3,22 @@ permission: "orbital.use"
 disabled-worlds:
   - ""
 
+strikes:
+  nuke:
+    enabled: true
+  stab:
+    enabled: true
+  dogs:
+    enabled: true
+  chunkeater:
+    enabled: true
+  stasis:
+    enabled: true
+  wither:
+    enabled: true
+  totem:
+    enabled: true
+
 cooldowns:
   enabled: false
   nuke: 300
@@ -10,6 +26,8 @@ cooldowns:
   dogs: 180
   chunkeater: 600
   stasis: 240
+  wither: 240
+  totem: 240
 
 rod:
   distance: 100
@@ -25,9 +43,11 @@ nuke:
   center-tnt: true
   Animated-rings: true
   damaged-rings: true
+  break-blocks: true
 
 stab:
   yield: 4.0
+  break-blocks: true
 
 dogs:
   count: 50
@@ -36,3 +56,11 @@ dogs:
   effects:
     - "SPEED:1"
     - "STRENGTH:2"
+
+wither:
+  charged: true
+  range: 20
+  width: 20
+  speed: 3
+  skulls: 15
+  duration-ticks: 600

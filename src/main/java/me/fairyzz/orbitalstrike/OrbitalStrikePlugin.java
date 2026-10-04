@@ -3,9 +3,14 @@ package me.fairyzz.orbitalstrike;
 import me.fairyzz.orbitalstrike.commands.OrbitalCommand;
 import me.fairyzz.orbitalstrike.config.PluginConfig;
 import me.fairyzz.orbitalstrike.listeners.ChunkEaterPlaceListener;
+import me.fairyzz.orbitalstrike.listeners.ExplosionListener;
 import me.fairyzz.orbitalstrike.listeners.FishingRodListener;
 import me.fairyzz.orbitalstrike.listeners.InteractListener;
+import me.fairyzz.orbitalstrike.listeners.TotemStasisListener;
 import me.fairyzz.orbitalstrike.updater.UpdateChecker;
+import org.bukkit.NamespacedKey;
+import org.bukkit.entity.TNTPrimed;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
@@ -24,11 +29,13 @@ public class OrbitalStrikePlugin extends JavaPlugin {
 
     private PluginConfig pluginConfig;
     private UpdateChecker updateChecker;
+    private NamespacedKey strikeTypeKey;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         pluginConfig = new PluginConfig(this);
+        strikeTypeKey = new NamespacedKey(this, "strike_type");
 
         updateChecker = new UpdateChecker(this);
         updateChecker.checkAsync();
@@ -41,6 +48,8 @@ public class OrbitalStrikePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FishingRodListener(this), this);
         getServer().getPluginManager().registerEvents(updateChecker, this);
         getServer().getPluginManager().registerEvents(new ChunkEaterPlaceListener(this), this);
+        getServer().getPluginManager().registerEvents(new TotemStasisListener(this), this);
+        getServer().getPluginManager().registerEvents(new ExplosionListener(this), this);
 
         getServer().getScheduler().runTaskLater(this, () -> updateChecker.sendConsoleUpdate(), 40L);
     }
@@ -67,6 +76,15 @@ public class OrbitalStrikePlugin extends JavaPlugin {
 
     public Set<UUID> getTrackedTNT() {
         return trackedTNT;
+    }
+
+    public void tagStrikeTNT(TNTPrimed tnt, String type) {
+        tnt.getPersistentDataContainer().set(strikeTypeKey, PersistentDataType.STRING, type);
+        trackedTNT.add(tnt.getUniqueId());
+    }
+
+    public String getStrikeType(TNTPrimed tnt) {
+        return tnt.getPersistentDataContainer().get(strikeTypeKey, PersistentDataType.STRING);
     }
 
     public CooldownManager getCooldowns() {

@@ -126,7 +126,7 @@ public class NukeStrike {
         tnt.setYield(yield);
         tnt.setInvulnerable(true);
         tntList.add(tnt.getUniqueId());
-        plugin.getTrackedTNT().add(tnt.getUniqueId());
+        plugin.tagStrikeTNT(tnt, "nuke");
         cacheTNT(tnt);
         return tnt;
     }
@@ -166,7 +166,7 @@ public class NukeStrike {
         UUID tntId       = tnt.getUniqueId();
         int  fallbackTick = cfg.getInt("nuke.fuse-ticks", 160);
         tntList.add(tntId);
-        plugin.getTrackedTNT().add(tntId);
+        plugin.tagStrikeTNT(tnt, "nuke");
         cacheTNT(tnt);
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
