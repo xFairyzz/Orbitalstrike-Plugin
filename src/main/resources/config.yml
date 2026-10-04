@@ -58,9 +58,9 @@ dogs:
     - "STRENGTH:2"
 
 wither:
-  charged: false
-  range: 8
-  width: 8
-  speed: 1.2
-  skulls: 3
+  charged: true
+  range: 20
+  width: 20
+  speed: 3
+  skulls: 15
   duration-ticks: 600
